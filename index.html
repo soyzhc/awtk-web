@@ -1,31 +1,40 @@
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
-<body>
-<script type="text/javascript" src="src/js/utils.js"></script>
+
+<html>
+<head>
+<script type="text/javascript" src="src/js/browser.js"></script>
 <script type="text/javascript" src="src/js/image_cache.js"></script>
+<script type="text/javascript" src="src/js/assets.js"></script>
+<script type="text/javascript" src="src/js/assets_manager.js"></script>
+<script type="text/javascript" src="src/js/image_loader.js"></script>
+<script type="text/javascript" src="src/js/utils.js"></script>
 <script type="text/javascript" src="src/js/vgcanvas_web.js"></script>
+<script type="text/javascript" src="src/js/awtk_wrap.js"></script>
+<script type="text/javascript" src="src/js/events_source.js"></script>
+<script type="text/javascript" src="src/js/main_loop_web.js"></script>
 <script type="text/javascript" src="awtk.js"></script>
 <script>
 
-awtkInit = Module.cwrap('awtkInit', 'number', []);
-awtkDeinit = Module.cwrap('awtkDeinit', 'number', []);
-awtkMainLoopStep = Module.cwrap('awtkMainLoopStep', 'number', ['number']);
-
-function step(timestamp) {
-    awtkMainLoopStep(10);
-
-    window.requestAnimationFrame(step);
+function appInit() {
+    let canvas = document.getElementById("awtk-lcd");
+    let eventSource = new EventsSource();
+    eventSource.attachToElement(canvas);
+    
+    Awtk.init();
 }
 
 window.onload = function() {
-    awtkInit(); 
-    window.requestAnimationFrame(step);
+    appInit();
 }
 
 window.onunload = function() {
-    awtkDeinit(); 
+    Awtk.deinit();
 }
 
 </script>
-<canvas id="awtk-lcd" width="480" height="320" style="border:1"></canvas>
-</body>
+</head>
 
+<body>
+<canvas id="awtk-lcd" />
+</body>
+</html>
