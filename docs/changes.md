@@ -1,3 +1,37 @@
+* 2019/4/28
+  * dpr限制为2。
+  * 修改android点击无效的问题。
+
+* 2019/4/26
+  * 更新文档。
+  * 支持mutable bitmap，color picker works.
+
+* 2019/4/25
+  * 完善编译脚本
+  * 修改slide menu裁剪的问题。
+  * 修改custom keyboard的问题。
+
+* 2019/4/24
+  * 自动选择：wasm/asm.js
+  * 生成优化代码。
+
+* 2019/4/23
+  * upgrade emcc to 1.38.30
+
+* 2019/4/22
+  * iphone 上可正常工作了。
+
+* 2019/4/21
+  * 输入法可以工作了。
+
+* 2019/4/20
+  * 支持vgcanvas paint.
+  * 支持动态修改width/height
+  * 输入法。
+
+* 2019/4/16
+  * 支持date time
+
 * 2019/4/15
   * 重新实现构建脚本
   * 窗口动画

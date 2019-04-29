@@ -54,3 +54,6 @@ dkms.conf
 .vscode
 tags
 webroot
+*.swp
+log
+args.txt

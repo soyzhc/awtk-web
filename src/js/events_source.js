@@ -286,14 +286,13 @@ EventsSource.points = [{}, {}, {}, {}, {}, {}, {}, {}];
 EventsSource.prototype.getAbsPoint = function (e, i) {
 	var index = i || 0;
 	var p = EventsSource.points[index];
-	var dpr = TBrowser.getDevicePixelRatio();
 	if (e) {
 		p.x = Math.max(e.pageX, e.x || e.clientX);
 		p.y = Math.max(e.pageY, e.y || e.clientY);
 		p.event = e;
 
-		this.lastPoint.x = p.x * dpr;
-		this.lastPoint.y = p.y * dpr;
+		this.lastPoint.x = p.x;
+		this.lastPoint.y = p.y;
 		this.lastPointEvent = e;
 	} else {
 		p = this.lastPoint;
@@ -352,7 +351,7 @@ EventsSource.prototype.onDoubleClickGlobal = function (event) {
 	}
 
 	if (!this.isRightMouseEvent(e)) {
-		this.onDoubleClick(this.getAbsPoint(e), e);
+		//this.onDoubleClick(this.getAbsPoint(e), e);
 	}
 
 	return this.cancelDefaultAction(e);
@@ -465,7 +464,7 @@ EventsSource.prototype.onTouchEndGlobal = function (event) {
 			}
 		}
 		if (dbClick) {
-			this.onDoubleClick(this.getAbsPoint(null), e);
+			//this.onDoubleClick(this.getAbsPoint(null), e);
 		}
 		this.onPointerUp(this.getAbsPoint(null), e);
 	}
@@ -525,18 +524,25 @@ EventsSource.prototype.onWheel = function (delta, event) {
 
 EventsSource.prototype.onMultiTouch = function (action, points, event) {}
 
-EventsSource.prototype.onPointerDown = function (point, event) {
+EventsSource.prototype.onPointerMove = function (point, event) {
 	mainLoopPost({
-		type: 'pointerdown',
+		type: 'pointermove',
 		x: point.x,
 		y: point.y,
 		timeStamp: event.timeStamp
 	});
 }
 
-EventsSource.prototype.onPointerMove = function (point, event) {
+EventsSource.prototype.onPointerDown = function (point, event) {
+	EventsSource.instance.pressed = true;
+	EventsSource.instance.lastTimeStamp = event.timeStamp;
+	EventsSource.instance.lastPoint = {
+		x: point.x,
+		y: point.y
+	};
+
 	mainLoopPost({
-		type: 'pointermove',
+		type: 'pointerdown',
 		x: point.x,
 		y: point.y,
 		timeStamp: event.timeStamp
@@ -550,17 +556,30 @@ EventsSource.prototype.onPointerUp = function (point, event) {
 		y: point.y,
 		timeStamp: event.timeStamp
 	});
+
+	EventsSource.instance.pressed = false;
+}
+
+EventsSource.fixPointerUp = function () {
+	if (EventsSource.instance.pressed) {
+		let e = {
+			timeStamp: EventsSource.instance.lastTimeStamp
+		};
+		EventsSource.instance.onPointerUp(EventsSource.instance.lastPoint, e);
+
+		console.log('EventsSource.fixPointerUp');
+	}
 }
 
 EventsSource.prototype.getPointerDeviceType = function () {
 	return EventsSource.pointerDeviceType;
 }
 
-EventsSource.init = function(canvas) {
-  let eventsSource = new EventsSource();
-  eventsSource.attachToElement(canvas);
+EventsSource.init = function (canvas) {
+	let eventsSource = new EventsSource();
+	eventsSource.attachToElement(canvas);
+	EventsSource.instance = eventsSource;
 
-  console.log('EventsSource.init');
-  return;
+	console.log('EventsSource.init');
+	return;
 }
-
