@@ -414,55 +414,6 @@ CanvasRenderingContext2DWebGL.prototype.drawGlyph = function(image, program, sx,
 }
 
 CanvasRenderingContext2DWebGL.prototype.doFillText = function(text, x, y, maxWidth) {
-	var ox = x;
-	var oy = y;
-	var gl = this.gl;
-	var r = this.tempRect;
-	var font = this.font || "16px sans";
-	var gc = this.autoPacker;
-	var fillStyle = this.state.fillStyle;
-	var color = fillStyle.str;
-
-	if(!this.autoPacker.measureText(font, text, color, r)) {
-		console.log("invalid font size");	
-		return;
-	}
-
-	var image = this.autoPacker.getImage();
-
-	switch(this.textAlign) {
-		case "right": {
-			ox = x - r.w;
-			break;
-		}
-		case "center": {
-			ox = x - (r.w >> 1);
-			break;
-		}
-		default: break;
-	}
-
-	switch(this.textBaseline) {
-		case "bottom": {
-			oy = y - r.h;
-			break;
-		}
-		case "middle": {
-			oy = y - (r.h >> 1);
-			break;
-		}
-		default:break;
-	}
-	var n = text.length;
-	var program = WebGLProgramDrawImage.get("normal");
-	for(var i = 0; i < n; i++) {
-		var c = text[i];
-		var rc = gc.getGlyph(font, c, color);
-		if(rc) {
-			this.drawGlyph(image, program, rc.x, rc.y, rc.charW, rc.h, ox, oy, rc.charW, rc.h);
-			ox += rc.w;
-		}
-	}
 	return;
 }
 
@@ -605,16 +556,10 @@ CanvasRenderingContext2DWebGL.prototype.prepareDrawImage = function(image, progr
 			this.commitDrawImage();
 			drawImageQueue.image = image; 
 			drawImageQueue.program = program;
-			if(!image.cannotPack && !image.packed) {
-				this.autoPacker.packImage(image);
-				this.loadTextureWithImage(image);
-			}
+		  this.loadTextureWithImage(image);
 		}
 	}else{
-		if(!image.cannotPack && !image.packed) {
-			this.autoPacker.packImage(image);
-			this.loadTextureWithImage(image);
-		}
+		this.loadTextureWithImage(image);
 
 		drawImageQueue.image = image; 
 		drawImageQueue.program = program;
@@ -837,24 +782,6 @@ CanvasRenderingContext2DWebGL.prototype.getHeight = function() {
 	return this.canvas.h || this.canvas.height;
 }
 
-CanvasRenderingContext2DWebGL.prototype.bigRect = function(p1, p2, p3, p4) {
-	var cw10 = this.canvasWidth10;
-	var ch10 = this.canvasHeight10;
-	var ret = Math.polygonclip([[p1.x, p1.y], [p2.x, p2.y], [p3.x, p3.y], [p4.x, p4.y]], [-10, -10, cw10+20, ch10+20]);
-
-	if(ret) {
-		var n = ret.length;
-		for(var i = 0; i < n; i++) {
-			var p = ret[i];
-			if(!i) {
-				this.addPoint(p[0], p[1], true);
-			}else {
-				this.addPoint(p[0], p[1], false);
-			}
-		}
-	}
-}
-
 CanvasRenderingContext2DWebGL.prototype.rect = function(x, y, w, h) {
 	var m = this.state.m;
 	var p1 = mat2d.transformPointInt(m, x, y, 0);
@@ -873,16 +800,11 @@ CanvasRenderingContext2DWebGL.prototype.rect = function(x, y, w, h) {
 		return;
 	}
 
-	if(w > (cw+1) || h > (ch+1)) {
-		//clip big rect
-		this.bigRect(p1, p2, p3, p4);
-	}else{
-		this.addPoint(p1.x, p1.y, true);
-		this.addPoint(p2.x, p2.y, false);
-		this.addPoint(p3.x, p3.y, false);
-		this.addPoint(p4.x, p4.y, false);
-		this.addPoint(p1.x, p1.y, false);
-	}
+  this.addPoint(p1.x, p1.y, true);
+  this.addPoint(p2.x, p2.y, false);
+  this.addPoint(p3.x, p3.y, false);
+  this.addPoint(p4.x, p4.y, false);
+  this.addPoint(p1.x, p1.y, false);
 };
 
 
@@ -1164,8 +1086,8 @@ CanvasRenderingContext2DWebGL.prototype.loadTextureWithImage = function(image) {
 
 	//NPOT
 	if(this.isPOT(image.width) && this.isPOT(image.height)) {
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 	}
 	else {
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -1173,6 +1095,21 @@ CanvasRenderingContext2DWebGL.prototype.loadTextureWithImage = function(image) {
 	}
 
 	gl.bindTexture(gl.TEXTURE_2D, null);
+
+	texture.update = function() {
+    if(image.dirty) {
+      image.dirty = false;
+      this.w = image.width;
+      this.h = image.height;
+      gl.bindTexture(gl.TEXTURE_2D, this);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.bindTexture(gl.TEXTURE_2D, null);
+    }
+	}
 
 	return image;
 }
@@ -1243,10 +1180,6 @@ CanvasRenderingContext2DWebGL.prototype.beginFrame = function() {
 	this.stencilColor = CanvasRenderingContext2DWebGL.stencilColor;
 	this.globalCompositeOperation = "source-over";
 	this.beginPath();
-
-	if(this.autoPacker.isOverflow()) {
-		this.autoPacker.reset();
-	}
 }
 
 CanvasRenderingContext2DWebGL.prototype.drawStat = function(stat) {
@@ -1398,8 +1331,6 @@ CanvasRenderingContext2DWebGL.prototype.init = function(canvas) {
 	this.drawPrimitiveQueue = {};
 	this.drawPrimitiveQueue.paths = Int16Array.create(1024);
 	this.drawPrimitiveQueue.dataBuffer = this.drawPrimitivesProgram.createDataBuffer(20*1024);
-	this.autoPacker = new AutoPacker();
-	this.autoPacker.init(this.gl);
 	this.statusFont = "20px sans";
 	this.statusFontColor = "Green";
 	this.statusBgColor = "rgba(0,0,0,1)";
@@ -1408,21 +1339,12 @@ CanvasRenderingContext2DWebGL.prototype.init = function(canvas) {
 }
 
 CanvasRenderingContext2DWebGL.prototype.ensureCtx2d = function() {
-	if(this.ctx2d) {
-		return;
-	}
-	this.canvas2d = document.createElement("canvas");
-	this.ctx2d = this.canvas2d.getContext("2d");
 }
 
 CanvasRenderingContext2DWebGL.prototype.measureText = function(text) {
-	this.ensureCtx2d();
-	this.ctx2d.font = this.font;
-	return this.ctx2d.measureText(text);
 }
 
 CanvasRenderingContext2DWebGL.prototype.setShowFPS = function(showFPS) {
-	this.showFPS = showFPS;
 }
 
 CanvasRenderingContext2DWebGL.create = function(canvas, options) {
@@ -1433,20 +1355,4 @@ CanvasRenderingContext2DWebGL.create = function(canvas, options) {
 	CanvasRenderingContext2DWebGL.stencilColor = CanvasRenderingContext2DWebGL.parseColor("white");
 
 	return ctx.init(canvas);
-}
-
-HTMLCanvasElement.prototype.getContextOrg = HTMLCanvasElement.prototype.getContext;
-HTMLCanvasElement.prototype.getContext = function(type, options) {
-	if(this.webglCtx) {
-		return this.webglCtx;
-	}
-
-	if(type === "2d-webgl") {
-		if(!this.webglCtx) {
-			this.webglCtx = CanvasRenderingContext2DWebGL.create(this, options);
-		}
-		return this.webglCtx;
-	}else{
-		return HTMLCanvasElement.prototype.getContextOrg.call(this, type, options);
-	}
 }
