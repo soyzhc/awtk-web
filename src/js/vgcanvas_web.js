@@ -311,16 +311,14 @@ VGCanvas.clipRect = function (x, y, w, h) {
 }
 
 VGCanvas.setFont = function (name, size) {
-  let fontSize = (size || 18);
   let fontName = pointerToString(name);
-  let font = Math.round(fontSize) + "px ";
+  let fontSize = Math.round(size || 18) + "px ";
+
   if (!(fontName) || fontName.indexOf('default') == 0) {
-    font = font + "Sans";
-  } else {
-    font = font + fontName;
+    fontName = TBrowser.config.defaultFont || 'sans';
   }
 
-  VGCanvas.ctx.font = font;
+  VGCanvas.ctx.font = fontSize + fontName; 
 
   return true;
 }

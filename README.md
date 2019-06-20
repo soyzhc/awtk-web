@@ -14,11 +14,11 @@
 
 * 3.[AWTK](https://github.com/zlgopen/awtk) 在浏览器中运行是在各种小程序中运行的基础。
 
-在线演示: [http://zlgopen.bceapp.com](http://zlgopen.bceapp.com/)
+在线演示: [http://zlgawtk.bceapp.com](http://zlgawtk.bceapp.com/)
 
 ## 二、目标
 
-[AWTK-WEB](https://github.com/zlgopen/awtk-web) 不是简单的把 [AWTK](https://github.com/zlgopen/awtk) 编译成 JS，让它在浏览器中运行，那样就无法满足一些非功能性的需求。我们把 [AWTK-WEB](https://github.com/zlgopen/awtk-web) 当作一个全新平台去移植，并充分考虑 WEB 平台的特点，有针对性的去实现以下的目标。
+[AWTK-WEB](https://github.com/zlgopen/awtk-web) 不是简单的把 [AWTK](https://github.com/zlgopen/awtk) 编译成 JS，让它在浏览器中运行，那样是无法满足一些非功能性的需求的。我们把 [AWTK-WEB](https://github.com/zlgopen/awtk-web) 当作一个全新平台去移植，并充分考虑 WEB 平台的特点，有针对性的去实现以下的目标。
 
 * 小。在 web 上运行的应用程序，体积小是非常重要的，体积越小打开越快，这直接影响用户体验。
 
@@ -33,7 +33,7 @@
 | QT           | 9M        |   http://example.qt.io/qt-webassembly/SensorTagDemo/SensorTagDemo.html    |
 | QT           | 3M        |   http://example.qt.io/qt-webassembly/opengl/hellowindow/hellowindow.html    |
 | LittleVG     | 1.3M      |   https://littlevgl.com/demo-basic    |
-| AWTK         | 150K      |   http://zlgopen.bceapp.com/awtk/demos/demoui/index.html    |
+| AWTK         | 150K      |   http://zlgawtk.bceapp.com/awtk/demos/demoui/index.html    |
 
 
 * 快。Android 手机浏览器性能普遍不高，要到达实用价值，性能优化至关重要。
@@ -98,13 +98,13 @@ python -m http.server 8080 --directory webroot
 * 1. 在 Windows 下 emscripten 自带的 python 环境与系统的 python 环境有冲突，需要指定 python 的完整路径。如:
 
 ```
-C:\Users\user\AppData\Local\Programs\Python\Python37\python.exe build.py ..\awtk\demos\demo_ui_web.json all
+C:\Users\user\AppData\Local\Programs\Python\Python37\python.exe build.py ..\awtk\demos\demoui_web.json all
 ```
 
 或
 
 ```
-.\build.py ..\awtk\demos\demo_ui_web.json all
+.\build.py ..\awtk\demos\demoui_web.json all
 ```
 
 ## 七、文档
@@ -114,6 +114,14 @@ C:\Users\user\AppData\Local\Programs\Python\Python37\python.exe build.py ..\awtk
 2.[移植笔记-序](docs/porting_notes_0.md)
 
 3.[移植笔记-基础知识](docs/porting_notes_1.md)
+
+4.[移植笔记-字体](docs/porting_notes_2.md)
+
+5.[移植笔记-图片](docs/porting_notes_3.md)
+
+6.[移植笔记-输入法](docs/porting_notes_4.md)
+
+7.[移植笔记-画布](docs/porting_notes_5.md)
 
 ## 八、示例
 
